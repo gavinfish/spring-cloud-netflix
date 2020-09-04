@@ -46,6 +46,14 @@ public class EurekaClientRunner extends AppRunner {
 		property("eureka.client.tls.enabled", "false");
 	}
 
+	public void enableHealthCheck() {
+		property("eureka.client.healthcheck.enabled", "true");
+	}
+
+	public void disableHealthCheck(){
+		property("eureka.client.healthcheck.enabled", "false");
+	}
+
 	public void setKeyStore(File keyStore, String keyStorePassword, String keyPassword) {
 		property("eureka.client.tls.key-store", pathOf(keyStore));
 		property("eureka.client.tls.key-store-password", keyStorePassword);

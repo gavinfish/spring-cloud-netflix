@@ -34,6 +34,7 @@ import org.springframework.cloud.netflix.eureka.serviceregistry.EurekaAutoServic
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author Dave Syer
@@ -49,6 +50,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(value = "eureka.client.enabled", matchIfMissing = true)
 @ConditionalOnDiscoveryEnabled
 @ConditionalOnBlockingDiscoveryEnabled
+@EnableScheduling
 public class EurekaDiscoveryClientConfiguration {
 
 	/**
@@ -67,6 +69,14 @@ public class EurekaDiscoveryClientConfiguration {
 	public EurekaDiscoveryClient discoveryClient(EurekaClient client,
 			EurekaClientConfig clientConfig) {
 		return new EurekaDiscoveryClient(client, clientConfig);
+	}
+
+	@Bean
+	// @ConditionalOnProperty("eureka.client.tls")
+	@ConditionalOnMissingBean
+	public EurekaTlsDiscoveryClient tlsDiscoveryClient(
+			EurekaDiscoveryClient discoveryClient) {
+		return new EurekaTlsDiscoveryClient(discoveryClient);
 	}
 
 	@Configuration(proxyBeanMethods = false)

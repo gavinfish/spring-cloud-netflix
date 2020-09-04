@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
@@ -89,6 +90,10 @@ public class EurekaClientTest extends BaseCertTest {
 		runner.setTrustStore(caCert, KEY_STORE_PASSWORD);
 	}
 
+	private static void enableHealthCheck(EurekaClientRunner runner){
+		runner.enableHealthCheck();
+	}
+
 	/**
 	 * Already proved this in waitForRegistration(). Keep this Test to express test
 	 * purpose explicitly.
@@ -139,6 +144,23 @@ public class EurekaClientTest extends BaseCertTest {
 			client.setTrustStore(wrongCaCert);
 			client.start();
 			assertThat(client.foundServiceViaEureka()).isFalse();
+		}
+	}
+
+	@Test
+	public void ReplaceWrongCertAndAutoReload() throws Exception {
+		try (EurekaClientRunner client = createEurekaClient()) {
+			enableTlsClient(client);
+			enableHealthCheck(client);
+			client.setKeyStore(wrongClientCert);
+			client.start();
+			assertThat(client.foundServiceViaEureka()).isFalse();
+			KeyAndCert newClientCert = ca.sign("client");
+			saveKeyAndCert(newClientCert, wrongClientCert);
+			// Wait for refresh thread to use the new certificate to communicate with
+			// server
+			Thread.sleep(100000);
+			assertThat(client.foundServiceViaEureka()).isTrue();
 		}
 	}
 

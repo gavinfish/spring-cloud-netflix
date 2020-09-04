@@ -41,6 +41,8 @@ public abstract class BaseCertTest {
 
 	protected static File wrongClientCert;
 
+	protected static KeyAndCert ca;
+
 	protected BaseCertTest() {
 	}
 
@@ -48,7 +50,7 @@ public abstract class BaseCertTest {
 	public static void createCertificates() throws Exception {
 		KeyTool tool = new KeyTool();
 
-		KeyAndCert ca = tool.createCA("MyCA");
+		ca = tool.createCA("MyCA");
 		KeyAndCert server = ca.sign("server");
 		KeyAndCert client = ca.sign("client");
 
@@ -82,6 +84,21 @@ public abstract class BaseCertTest {
 			store.store(output, KEY_STORE_PASSWORD.toCharArray());
 		}
 		return result;
+	}
+
+	static File saveKeyAndCert(KeyAndCert keyCert, File target) throws Exception {
+		return saveKeyStore(target, () -> keyCert.storeKeyAndCert(KEY_PASSWORD));
+	}
+
+	private static File saveKeyStore(File target, KeyStoreSupplier func)
+			throws Exception {
+		target.deleteOnExit();
+
+		try (OutputStream output = new FileOutputStream(target)) {
+			KeyStore store = func.createKeyStore();
+			store.store(output, KEY_STORE_PASSWORD.toCharArray());
+		}
+		return target;
 	}
 
 	interface KeyStoreSupplier {
